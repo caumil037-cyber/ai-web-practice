@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>음식건강 지키미</title>
+<style>
+  :root {
+    --bg: #f7f7f5; --card: #ffffff; --line: #e2e2dd;
+    --text: #23231f; --muted: #6d6d66; --accent: #3b6e4f;
+    --badge-bg: #efeeea; --badge-text: #5a5a52;
+    --warn-bg: #f6ecd8; --warn-text: #8a6320; --warn-line: #e0c795;
+    --btn-text: #ffffff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #1a1a18; --card: #242421; --line: #383833;
+      --text: #ecece6; --muted: #a3a39a; --accent: #8fc2a3;
+      --badge-bg: #33332e; --badge-text: #b9b9b0;
+      --warn-bg: #3d3323; --warn-text: #e0b96c; --warn-line: #5c4a2b;
+      --btn-text: #14201a;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #1a1a18; --card: #242421; --line: #383833;
+    --text: #ecece6; --muted: #a3a39a; --accent: #8fc2a3;
+    --badge-bg: #33332e; --badge-text: #b9b9b0;
+    --warn-bg: #3d3323; --warn-text: #e0b96c; --warn-line: #5c4a2b;
+    --btn-text: #14201a;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 32px 16px 64px;
+    background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                 "Malgun Gothic", "Noto Sans KR", sans-serif;
+    line-height: 1.6;
+  }
+  .wrap { max-width: 560px; margin: 0 auto; }
+
+  h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: -0.02em; }
+  .tagline { color: var(--muted); font-size: 13px; margin: 0 0 28px; }
+
+  label { display: block; font-size: 15px; margin-bottom: 8px; }
+  .hint { color: var(--muted); font-size: 13px; margin: 0 0 10px; }
+
+  textarea {
+    width: 100%; min-height: 76px; padding: 12px;
+    font: inherit; font-size: 15px; color: var(--text);
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 8px; resize: vertical;
+  }
+  textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  button.check {
+    display: block; width: 100%; margin-top: 12px; padding: 12px;
+    font: inherit; font-size: 16px; font-weight: 600;
+    color: var(--btn-text); background: var(--accent);
+    border: 0; border-radius: 8px; cursor: pointer;
+  }
+
+  .divider {
+    display: flex; align-items: center; gap: 12px;
+    margin: 32px 0 16px; color: var(--muted); font-size: 13px;
+  }
+  .divider::before, .divider::after {
+    content: ""; flex: 1; height: 1px; background: var(--line);
+  }
+
+  .pair {
+    border: 1px solid var(--line); border-radius: 8px;
+    background: var(--card); margin-bottom: 8px; overflow: hidden;
+  }
+  .pair > summary {
+    display: flex; align-items: center; gap: 8px;
+    padding: 12px 14px; cursor: pointer; font-size: 15px; list-style: none;
+  }
+  .pair > summary::-webkit-details-marker { display: none; }
+  .arrow { color: var(--muted); font-size: 12px; width: 12px; }
+  .pair[open] .arrow::before { content: "\25BE"; }
+  .pair:not([open]) .arrow::before { content: "\25B8"; }
+  .pair-name { flex: 1; }
+
+  .badge {
+    font-size: 12px; padding: 2px 8px; border-radius: 999px;
+    background: var(--badge-bg); color: var(--badge-text); white-space: nowrap;
+  }
+  .badge.warn {
+    background: var(--warn-bg); color: var(--warn-text);
+    border: 1px solid var(--warn-line);
+  }
+
+  .detail { border-top: 1px solid var(--line); padding: 14px; font-size: 14px; }
+  .detail h3 {
+    font-size: 12px; font-weight: 600; color: var(--muted);
+    margin: 0 0 4px; letter-spacing: 0.02em;
+  }
+  .detail section + section { margin-top: 14px; }
+  .detail p { margin: 0; }
+  .myth { font-style: italic; }
+  .detail a { color: var(--accent); }
+  .sub { color: var(--muted); font-size: 13px; margin-top: 4px; }
+  .claim {
+    border-left: 3px solid var(--line); padding-left: 10px; color: var(--muted);
+  }
+
+  .empty {
+    border: 1px solid var(--line); border-radius: 8px;
+    background: var(--card); padding: 20px 14px; text-align: center;
+  }
+  .empty p { margin: 0; }
+
+  .note { margin-top: 28px; color: var(--muted); font-size: 12px; line-height: 1.7; }
+  .note b { color: var(--text); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>음식건강 지키미</h1>
+  <p class="tagline">들었던 음식 속설이 진짜인지 확인합니다.</p>
+
+  <label for="input">오늘 먹을 재료를 적어주세요</label>
+  <p class="hint">쉼표(,)로 구분해서 적어주세요. 예: 감, 게, 삼겹살, 소주</p>
+  <textarea id="input" placeholder="감, 게, 삼겹살, 소주"></textarea>
+  <button class="check" id="checkBtn">검사하기</button>
+
+  <div id="result"></div>
+
+  <p class="note">
+    <b>판정이 확실하지 않으면 「확인 필요」라고 말합니다. 그럴듯하게 지어내지 않습니다.</b><br>
+    · <b>근거 없음</b> — 전문가가 "근거 없는 속설"이라고 확인한 것입니다.<br>
+    · <b>확인 필요</b> — 속설은 있지만 <b>아직 검증하지 못했습니다.</b> 맞다는 뜻도, 틀리다는 뜻도 아닙니다.<br>
+    ※ 감을 "홍시"나 "단감"으로 적으면 찾지 못합니다. (PLAN.md 1단계 알려진 한계)
+  </p>
+
+</div>
+
+<script>
+/* ------------------------------------------------------------------
+   데이터 출처
+   · 근거 없음 5건 : PLAN.md 3-6. 주간경향 / 뉴스톱 팩트체크 기사로 검증됨.
+   · 확인 필요 11건: 전북특별자치도_음식궁합_20191219 (공공데이터포털)
+                     115건 중 "같이 먹지 말라"고 한 항목만 뽑음.
+                     이 데이터에는 판정과 전문가 근거가 없으므로
+                     임의로 "근거 없음"을 붙이지 않고 "확인 필요"로 둔다.
+   이 배열은 data/jeonbuk-food-gunghap-20191219.csv 에서 뽑아낸 것이다.
+   ------------------------------------------------------------------ */
+var DATA = [
+  {
+    "a": "감",
+    "b": "게",
+    "verdict": "근거 없음",
+    "myth": "게 먹고 감 먹으면 안 된다",
+    "mythFrom": "",
+    "claim": "감은 수렴작용을 하는 탄닌성분이 있어 함께 먹으면 소화 흡수를 방해한다. 식중독 균 오염 가능성이 많은 음식과 소화가 원활하지 않은 성분의 만남, 피해야할 음식 조합이다.",
+    "experts": "최낙언(좋은식품정보 대표), 명승권(국립암센터 교수)",
+    "source": "주간경향 / 뉴스톱 팩트체크",
+    "link": "https://www.newstopkorea.com/news/articleView.html?idxno=1747"
+  },
+  {
+    "a": "삼겹살",
+    "b": "소주",
+    "verdict": "근거 없음",
+    "myth": "삼겹살에 소주를 같이 먹으면 안 된다",
+    "mythFrom": "",
+    "claim": "",
+    "experts": "정재훈(약사)",
+    "source": "주간경향",
+    "link": "https://weekly.khan.co.kr/article/202001171824441"
+  },
+  {
+    "a": "치킨",
+    "b": "맥주",
+    "verdict": "근거 없음",
+    "myth": "치킨에 맥주를 같이 먹으면 안 된다",
+    "mythFrom": "",
+    "claim": "",
+    "experts": "명승권(국립암센터 교수)",
+    "source": "주간경향",
+    "link": "https://weekly.khan.co.kr/article/202001171824441"
+  },
+  {
+    "a": "시금치",
+    "b": "두부",
+    "verdict": "근거 없음",
+    "myth": "시금치와 두부를 같이 먹으면 안 된다",
+    "mythFrom": "",
+    "claim": "",
+    "experts": "최낙언(좋은식품정보 대표)",
+    "source": "주간경향",
+    "link": "https://weekly.khan.co.kr/article/202001171824441"
+  },
+  {
+    "a": "감",
+    "b": "도토리묵",
+    "verdict": "근거 없음",
+    "myth": "감과 도토리묵을 같이 먹으면 안 된다",
+    "mythFrom": "",
+    "claim": "도토리묵을 먹은 후 후식으로 감을 먹게 되면 두가지 모두 떫은 맛의 탄닌을 많이 함유하고 있어 변비가 심해질 뿐 아니라 적혈구를 만드는 철분이 탄닌과 결합하여 소화흡수를 방해하므로 빈혈이 생길 수도 있다.",
+    "experts": "최낙언(좋은식품정보 대표)",
+    "source": "주간경향",
+    "link": "https://weekly.khan.co.kr/article/202001171824441"
+  },
+  {
+    "a": "장어",
+    "b": "복숭아",
+    "verdict": "확인 필요",
+    "myth": "장어 먹고 복숭아는 NO.",
+    "mythFrom": "전북특별자치도_음식궁합_20191219 (공공데이터포털) 95번",
+    "claim": "이처럼 장어는 고단백, 고지방식품으로 평소 지방섭취가 적은 사람의 경우에는 소화가 더디게 된다. 여기에 후식으로 신맛을 내는 구연산, 사과산 등이 들어 있는 복숭아를 먹을 경우 유기산의 작용으로 지방의 소화를 방해함으로써 설사를 일으키기 쉽다.",
+    "experts": "",
+    "source": "해당 데이터가 밝힌 원 출처: 우리들의 한방넷(urihanbang.org)",
+    "link": "https://www.data.go.kr/data/15050016/fileData.do"
+  },
+  {
+    "a": "당근",
+    "b": "무",
+    "verdict": "확인 필요",
+    "myth": "당근 오이와 무",
+    "mythFrom": "전북특별자치도_음식궁합_20191219 (공공데이터포털) 96번",
+    "claim": "비타민 C 산화 효소를 가진 채소류로 오이 외에 당근, 호박, 가지 등이 있다. 따라서 무채를 만들 때 당근을 그냥 넣은 경우도 비타민 C의 파괴를 가져온다.",
+    "experts": "",
+    "source": "해당 데이터가 밝힌 원 출처: 우리들의 한방넷(urihanbang.org)",
+    "link": "https://www.data.go.kr/data/15050016/fileData.do"
+  },
+  {
+    "a": "오이",
+    "b": "무",
+    "verdict": "확인 필요",
+    "myth": "당근 오이와 무",
+    "mythFrom": "전북특별자치도_음식궁합_20191219 (공공데이터포털) 96번",
+    "claim": "비타민 C 산화 효소를 가진 채소류로 오이 외에 당근, 호박, 가지 등이 있다. 따라서 무채를 만들 때 당근을 그냥 넣은 경우도 비타민 C의 파괴를 가져온다.",
+    "experts": "",
+    "source": "해당 데이터가 밝힌 원 출처: 우리들의 한방넷(urihanbang.org)",
+    "link": "https://www.data.go.kr/data/15050016/fileData.do"
+  },
+  {
+    "a": "미역",
+    "b": "파",
+    "verdict": "확인 필요",
+    "myth": "미역국에 파는 안돼요",
+    "mythFrom": "전북특별자치도_음식궁합_20191219 (공공데이터포털) 98번",
+    "claim": "또한 파에는 인과 유황 성분이 많아 미역국에 넣으면 미역 안에 많은 칼슘의 흡수를 방해 한다. 따라서 미역국에 파를 섞으면 맛도 어울리지 않을 뿐 아니라 영양효율성 면에도 맞지 않다.",
+    "experts": "",
+    "source": "해당 데이터가 밝힌 원 출처: 우리들의 한방넷(urihanbang.org)",
+    "link": "https://www.data.go.kr/data/15050016/fileData.do"
+  },
+  {
+    "a": "팥",
+    "b": "식소다",
+    "verdict": "확인 필요",
+    "myth": "팥과 식소다",
+    "mythFrom": "전북특별자치도_음식궁합_20191219 (공공데이터포털) 99번",
+    "claim": "그런데 팥은 껍질이 두꺼워 물에 불려도 수분침투가 어려우므로 대게 타서 침수시켜 불린 후 거피하여 사용한다. 팥을 쉽게 삶기 위해 알칼리성인 식소다를 넣기도 하나 이는 팥에 들어 있는 B1의 손실을 가져온다.",
+    "experts": "",
+    "source": "해당 데이터가 밝힌 원 출처: 우리들의 한방넷(urihanbang.org)",
+    "link": "https://www.data.go.kr/data/15050016/fileData.do"
+  },
+  {
+    "a": "시금치",
+    "b": "근대",
+    "verdict": "확인 필요",
+    "myth": "시금치와 근대",
+    "mythFrom": "전북특별자치도_음식궁합_20191219 (공공데이터포털) 100번",
+    "claim": "그런데 시금치와 함께 수산의 함량이 많은 채소가 근대이다. 따라서 시금치와 근대를 함께 먹는 것은 칼슘의 이용율 저하를 가져올 수 있으므로 같이 먹지 않는 것이 좋다.",
+    "experts": "",
+    "source": "해당 데이터가 밝힌 원 출처: 우리들의 한방넷(urihanbang.org)",
+    "link": "https://www.data.go.kr/data/15050016/fileData.do"
+  },
+  {
+    "a": "햄버거",
+    "b": "콜라",
+    "verdict": "확인 필요",
+    "myth": "햄버거 먹을 때 콜라 마시지 말아요",
+    "mythFrom": "전북특별자치도_음식궁합_20191219 (공공데이터포털) 101번",
+    "claim": "하지만 이러한 성분들은 인체 내에서 칼슘 성분과 쉽게 결합하는 성질이 있어 칼슘의 흡수를 저해하게 된다. 따라서 햄버거를 먹을 때 콜라를 마시는 것보다 칼슘을 보강할 수 있는 우유나 칼슘의 흡수를 좋게 하는 오렌지 쥬스 등과 먹는 것이 좋다.",
+    "experts": "",
+    "source": "해당 데이터가 밝힌 원 출처: 우리들의 한방넷(urihanbang.org)",
+    "link": "https://www.data.go.kr/data/15050016/fileData.do"
+  },
+  {
+    "a": "로얄젤리",
+    "b": "매실",
+    "verdict": "확인 필요",
+    "myth": "로얄젤리와 매실",
+    "mythFrom": "전북특별자치도_음식궁합_20191219 (공공데이터포털) 105번",
+    "claim": "그런데 서로 다른 특성을 가지고 있는 로얄젤리와 매실을 함께 먹거나 섞어 먹으면 로얄젤리의 활성물질이 산도의 갑작스런 변화를 받게 된다. 그렇게 되면로얄젤리의 효과는 없어지고 말며 매실의 특성도 약화되는 것이다.",
+    "experts": "",
+    "source": "해당 데이터가 밝힌 원 출처: 우리들의 한방넷(urihanbang.org)",
+    "link": "https://www.data.go.kr/data/15050016/fileData.do"
+  },
+  {
+    "a": "조개",
+    "b": "옥수수",
+    "verdict": "확인 필요",
+    "myth": "조개와 옥수수",
+    "mythFrom": "전북특별자치도_음식궁합_20191219 (공공데이터포털) 106번",
+    "claim": "조개류는 부패균의 번식이 잘 되는 수산물이며, 산란기에는 자신을 적으로부터 보호 하기 위해 독성물질을 생성하기도 한다. 이런한 조개를 먹고 소화성이 떨어지는 옥수수를 먹으면 배탈이 나기 쉽다.",
+    "experts": "",
+    "source": "해당 데이터가 밝힌 원 출처: 우리들의 한방넷(urihanbang.org)",
+    "link": "https://www.data.go.kr/data/15050016/fileData.do"
+  },
+  {
+    "a": "문어",
+    "b": "고사리",
+    "verdict": "확인 필요",
+    "myth": "문어와 고사리",
+    "mythFrom": "전북특별자치도_음식궁합_20191219 (공공데이터포털) 107번",
+    "claim": "고단백식품의 하나인 문어는 영양가는 높지만 소화에 부담이 가는 식품이다. 고사리에는 섬유질이 3% 이상 들어 있어서 문어와 고사리를 먹으면 위장이 약한 사람은 소화불량에 걸리기가 쉽다.",
+    "experts": "",
+    "source": "해당 데이터가 밝힌 원 출처: 우리들의 한방넷(urihanbang.org)",
+    "link": "https://www.data.go.kr/data/15050016/fileData.do"
+  },
+  {
+    "a": "치즈",
+    "b": "콩",
+    "verdict": "확인 필요",
+    "myth": "치즈와 콩류",
+    "mythFrom": "전북특별자치도_음식궁합_20191219 (공공데이터포털) 111번",
+    "claim": "콩은 고단백 고지방 식품이며 인산의 함량이 많은 식품이다. 그런데 치즈와 콩류를 함께 먹으면 인산 칼슘이 만들어져 흡수되지 않고 몸밖으로 빠져 나가게 된다.",
+    "experts": "",
+    "source": "해당 데이터가 밝힌 원 출처: 우리들의 한방넷(urihanbang.org)",
+    "link": "https://www.data.go.kr/data/15050016/fileData.do"
+  }
+];
+
+var input = document.getElementById("input");
+var result = document.getElementById("result");
+
+document.getElementById("checkBtn").addEventListener("click", check);
+input.addEventListener("keydown", function (e) {
+  if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) check();
+});
+
+function esc(s) {
+  return String(s).replace(/[&<>"]/g, function (c) {
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+  });
+}
+
+/* 쉼표로 나누고, 공백 제거하고, 빈 것과 중복을 뺀다 */
+function parse(text) {
+  var seen = {}, out = [];
+  text.split(",").forEach(function (raw) {
+    var name = raw.trim();
+    if (!name || seen[name]) return;
+    seen[name] = true;
+    out.push(name);
+  });
+  return out;
+}
+
+/* 넣은 재료로 짝을 다 만들어 데이터와 대조 */
+function findMatches(items) {
+  var hits = [];
+  for (var i = 0; i < items.length; i++) {
+    for (var j = i + 1; j < items.length; j++) {
+      var x = items[i], y = items[j];
+      DATA.forEach(function (row) {
+        if ((row.a === x && row.b === y) || (row.a === y && row.b === x)) {
+          hits.push({ left: x, right: y, row: row });
+        }
+      });
+    }
+  }
+  /* 검증된 판정(근거 없음)을 위로 */
+  return hits.sort(function (p, q) {
+    return (p.row.verdict === "근거 없음" ? 0 : 1) - (q.row.verdict === "근거 없음" ? 0 : 1);
+  });
+}
+
+function detail(r) {
+  var html = "";
+
+  html += '<section><h3>속설</h3>' +
+          '<p class="myth">&ldquo;' + esc(r.myth) + '&rdquo;</p>';
+  if (r.mythFrom) html += '<p class="sub">' + esc(r.mythFrom) + '</p>';
+  html += '</section>';
+
+  html += '<section><h3>판정</h3><p>' + esc(r.verdict) + '</p>';
+  if (r.verdict === "확인 필요") {
+    html += '<p class="sub">전문가 자료로 아직 대조하지 못했습니다. ' +
+            '맞다는 뜻도, 틀리다는 뜻도 아닙니다.</p>';
+  }
+  html += '</section>';
+
+  if (r.claim) {
+    var label = (r.verdict === "근거 없음")
+      ? "속설 쪽 주장 (판정 근거 아님)"
+      : "데이터가 말하는 이유 (검증 안 됨)";
+    html += '<section><h3>' + label + '</h3>' +
+            '<p class="claim">' + esc(r.claim) + '</p></section>';
+  }
+
+  html += '<section><h3>근거 출처</h3><p>';
+  if (r.experts) html += esc(r.experts) + '<br>';
+  html += esc(r.source);
+  if (r.link) {
+    html += ' · <a href="' + esc(r.link) + '" target="_blank" rel="noopener">원문 보기</a>';
+  }
+  html += '</p></section>';
+
+  return html;
+}
+
+function check() {
+  var hits = findMatches(parse(input.value));
+  var html = '<div class="divider">결과</div>';
+
+  if (hits.length === 0) {
+    html += '<div class="empty">' +
+              '<p>등록된 속설이 없습니다.</p>' +
+              '<p class="sub">(아직 ' + DATA.length + '쌍만 등록되어 있습니다)</p>' +
+            '</div>';
+  } else {
+    hits.forEach(function (hit) {
+      var r = hit.row;
+      var cls = (r.verdict === "근거 없음") ? "badge" : "badge warn";
+      html += '<details class="pair">' +
+                '<summary>' +
+                  '<span class="arrow"></span>' +
+                  '<span class="pair-name">' + esc(hit.left) + ' + ' + esc(hit.right) + '</span>' +
+                  '<span class="' + cls + '">' + esc(r.verdict) + '</span>' +
+                '</summary>' +
+                '<div class="detail">' + detail(r) + '</div>' +
+              '</details>';
+    });
+  }
+  result.innerHTML = html;
+}
+</script>
+</body>
+</html>
